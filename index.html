@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator for Kondensrisiko</title>
+    <style>
+        :root {
+            --primary-color: #005f73;
+            --secondary-color: #0a9396;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --success-color: #2a9d8f;
+            --error-color: #e76f51;
+            --white-color: #ffffff;
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .calculator-container {
+            background-color: var(--white-color);
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 750px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        .phi-symbol {
+            font-size: 1.2em;
+            vertical-align: baseline;
+        }
+        input {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: var(--font-family);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(10, 147, 150, 0.2);
+        }
+        #calculate-btn {
+            grid-column: 1 / -1;
+            padding: 15px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+            color: var(--white-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        #calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        #error-message {
+            grid-column: 1 / -1;
+            color: var(--error-color);
+            font-weight: 600;
+            text-align: center;
+            margin: -5px 0 10px 0;
+            display: none;
+        }
+        #results {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .result-message {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .result-message.placeholder {
+            background-color: var(--background-color);
+            color: #999;
+            border: 1px dashed var(--border-color);
+        }
+        .result-message.success { 
+            background-color: #e0f2f1; 
+            color: var(--success-color); 
+            border: 1px solid var(--success-color); 
+        }
+        .result-message.failure { 
+            background-color: #fff1ee; 
+            color: var(--error-color); 
+            border: 1px solid var(--error-color); 
+        }
+        .result-details p {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 10px 0;
+            font-size: 1em;
+        }
+        .result-details .result-value {
+            font-weight: 600;
+            color: var(--primary-color);
+            text-align: right;
+            min-width: 50px;
+        }
+        .custom-select-container { position: relative; }
+        .custom-select-trigger {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: var(--white-color);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+        .custom-select-trigger .trigger-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .custom-select-trigger::after {
+            content: '▼';
+            font-size: 0.8em;
+            margin-left: auto;
+            padding-left: 10px;
+        }
+        .custom-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--white-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            list-style: none;
+            padding: 5px 0;
+            margin-top: 5px;
+            z-index: 10;
+            display: none;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .custom-options.open { display: block; }
+        .custom-options li {
+            padding: 12px 15px;
+            cursor: pointer;
+            white-space: normal;
+            transition: background-color 0.2s;
+        }
+        .custom-options li:hover, .custom-options li.selected { background-color: #e0f2f1; }
+        @media (max-width: 750px) { .form-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) { body { padding: 10px; } h1 { font-size: 1.5em; } }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <h1>Kalkulator for Risiko av Overflatekondens</h1>
+        <form id="condensation-form" class="form-grid">
+            <div class="form-group">
+                <label for="theta_i">Innetemperatur (&theta;<sub>i</sub>) [°C]</label>
+                <input type="number" id="theta_i" value="20" required>
+            </div>
+            <div class="form-group">
+                <label for="theta_e">Utetemperatur (&theta;<sub>e</sub>) [°C]</label>
+                <input type="number" id="theta_e" value="-5" required>
+            </div>
+            <div class="form-group">
+                <label for="phi_e">Utefuktighet (<span class="phi-symbol">&phi;</span><sub>e</sub>) [%]</label>
+                <input type="number" id="phi_e" value="85" required>
+            </div>
+            <div class="form-group">
+                <label for="u_value">U-verdi for bygningsdel [W/m²K]</label>
+                <input type="number" id="u_value" step="0.01" value="0.2" required>
+            </div>
+            <div class="form-group full-width">
+                <label for="rsi_value_trigger">Type og plassering av bygningsdel (Rsi)</label>
+                <div class="custom-select-container" id="rsi_select_container">
+                    <div class="custom-select-trigger" id="rsi_value_trigger" tabindex="0"><span class="trigger-text">Bygningsdel i øvre sone (f.eks. hjørne mot tak) eller yttervegg bak gardin</span></div>
+                    <ul class="custom-options" id="rsi_options">
+                        <li data-value="0.13">Gjennomsiktig bygningsdel, vinduskarm, dør eller bygningsdel mot uoppvarmet rom</li>
+                        <li data-value="0.25" class="selected">Bygningsdel i øvre sone (f.eks. hjørne mot tak) eller yttervegg bak gardin</li>
+                        <li data-value="0.35">Bygningsdel i nedre sone (f.eks. hjørne mot gulv, ved vinduskarm)</li>
+                        <li data-value="0.50">Yttervegg med høye møbler (f.eks. hyller) plassert med en liten luftespalte</li>
+                        <li data-value="1.00">Yttervegg med fastmonterte, tettstående møbler</li>
+                    </ul>
+                </div>
+                <input type="hidden" id="rsi_value" value="0.25">
+            </div>
+            <div class="form-group full-width">
+                <label for="humidity_class_trigger">Fuktklasse for rommet</label>
+                <div class="custom-select-container" id="humidity_select_container">
+                    <div class="custom-select-trigger" id="humidity_class_trigger" tabindex="0"><span class="trigger-text">3: Bygninger med ukjent bruk</span></div>
+                    <ul class="custom-options" id="humidity_options">
+                        <li data-value="1">1: Tørrlager</li>
+                        <li data-value="2">2: Kontorer, boliger med normal bruk og ventilasjon</li>
+                        <li data-value="3" class="selected">3: Bygninger med ukjent bruk</li>
+                        <li data-value="4">4: Idrettshaller, kjøkken, kantiner</li>
+                        <li data-value="5">5: Vaskerier, bryggerier, svømmehaller</li>
+                    </ul>
+                </div>
+                <input type="hidden" id="humidity_class" value="3">
+            </div>
+            <p id="error-message"></p>
+            <button type="button" id="calculate-btn">Beregn Risiko</button>
+        </form>
+
+        <div id="results">
+            <div id="result-message" class="result-message placeholder">Vurdering av krav</div>
+            <div class="result-details">
+                <p>
+                    <span class="result-label">Beregnet temperaturfaktor (f<sub>Rsi</sub>):</span>
+                    <span class="result-value" id="frsi-result">--</span>
+                </p>
+                <p>
+                    <span class="result-label">Nødvendig temperaturfaktor (f<sub>Rsi,min</sub>):</span>
+                    <span class="result-value" id="frsi-min-result">--</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const rsiContainer = document.getElementById('rsi_select_container');
+            const rsiTrigger = document.getElementById('rsi_value_trigger');
+            const rsiOptions = document.getElementById('rsi_options');
+            const rsiHiddenInput = document.getElementById('rsi_value');
+            
+            rsiTrigger.addEventListener('click', () => rsiOptions.classList.toggle('open'));
+            rsiOptions.querySelectorAll('li').forEach(option => {
+                option.addEventListener('click', () => {
+                    rsiOptions.querySelector('li.selected')?.classList.remove('selected');
+                    option.classList.add('selected');
+                    rsiTrigger.querySelector('.trigger-text').textContent = option.textContent;
+                    rsiHiddenInput.value = option.dataset.value;
+                    rsiOptions.classList.remove('open');
+                });
+            });
+
+            const humidityContainer = document.getElementById('humidity_select_container');
+            const humidityTrigger = document.getElementById('humidity_class_trigger');
+            const humidityOptions = document.getElementById('humidity_options');
+            const humidityHiddenInput = document.getElementById('humidity_class');
+
+            humidityTrigger.addEventListener('click', () => humidityOptions.classList.toggle('open'));
+            humidityOptions.querySelectorAll('li').forEach(option => {
+                option.addEventListener('click', () => {
+                    humidityOptions.querySelector('li.selected')?.classList.remove('selected');
+                    option.classList.add('selected');
+                    humidityTrigger.querySelector('.trigger-text').textContent = option.textContent;
+                    humidityHiddenInput.value = option.dataset.value;
+                    humidityOptions.classList.remove('open');
+                });
+            });
+
+            window.addEventListener('click', (e) => {
+                if (!rsiContainer.contains(e.target)) rsiOptions.classList.remove('open');
+                if (!humidityContainer.contains(e.target)) humidityOptions.classList.remove('open');
+            });
+            
+            const vaporPressureData = [
+                [-20, 1.03], [-19, 1.14], [-18, 1.25], [-17, 1.37], [-16, 1.50], [-15, 1.65], [-14, 1.81], [-13, 1.98], [-12, 2.17], [-11, 2.37], [-10, 2.60], [-9, 2.84], [-8, 3.10], [-7, 3.37], [-6, 3.68], [-5, 4.01], [-4, 4.37], [-3, 4.76], [-2, 5.17], [-1, 5.62], [0, 6.11], [1, 6.57], [2, 7.05], [3, 7.59], [4, 8.13], [5, 8.72], [6, 9.35], [7, 10.02], [8, 10.73], [9, 11.48], [10, 12.28], [11, 13.12], [12, 14.03], [13, 14.98], [14, 15.99], [15, 17.06], [16, 18.18], [17, 19.37], [18, 20.65], [19, 21.97], [20, 23.40], [21, 24.87], [22, 26.45], [23, 28.10], [24, 29.85], [25, 31.69], [26, 33.62], [27, 35.66], [28, 37.81], [29, 40.06], [30, 42.44]
+            ];
+            const errorMessageP = document.getElementById('error-message');
+            function interpolate(x, x0, y0, x1, y1) { if (x1 === x0) return y0; return y0 + (x - x0) * (y1 - y0) / (x1 - x0); }
+            function getSaturatedVaporPressure(temp) {
+                if (temp <= vaporPressureData[0][0]) return vaporPressureData[0][1];
+                if (temp >= vaporPressureData.length - 1][0]) return vaporPressureData[vaporPressureData.length - 1][1];
+                for (let i = 0; i < vaporPressureData.length - 1; i++) {
+                    const [t0, p0] = vaporPressureData[i]; const [t1, p1] = vaporPressureData[i + 1];
+                    if (temp >= t0 && temp <= t1) return interpolate(temp, t0, p0, t1, p1);
+                } return vaporPressureData[vaporPressureData.length - 1][1];
+            }
+            function getTempForSaturatedPressure(pressure) {
+                if (pressure <= vaporPressureData[0][1]) return vaporPressureData[0][0];
+                if (pressure >= vaporPressureData[vaporPressureData.length - 1][1]) return vaporPressureData[vaporPressureData.length - 1][0];
+                for (let i = 0; i < vaporPressureData.length - 1; i++) {
+                    const [t0, p0] = vaporPressureData[i]; const [t1, p1] = vaporPressureData[i + 1];
+                    if (pressure >= p0 && pressure <= p1) return interpolate(pressure, p0, t0, p1, t1);
+                } return vaporPressureData[vaporPressureData.length - 1][0];
+            }
+            function getDeltaP(humidityClass, t) {
+                const t_num = Number(t);
+                const class_num = Number(humidityClass);
+                if (t_num <= 0) {
+                    const constantValues = { 1: 270, 2: 640, 3: 810, 4: 1080, 5: 1360 };
+                    return constantValues[class_num];
+                }
+                if (t_num >= 20) {
+                    if (class_num === 4 || class_num === 5) return 200;
+                    return 100;
+                }
+                const formulas = {
+                    1: (temp) => -8.5 * temp + 270,
+                    2: (temp) => -27 * temp + 640,
+                    3: (temp) => -35.5 * temp + 810,
+                    4: (temp) => -44 * temp + 1080,
+                    5: (temp) => -58 * temp + 1360,
+                };
+                return formulas[class_num](t_num);
+            }
+
+            function performCalculation() {
+                const messageDiv = document.getElementById('result-message');
+                messageDiv.classList.remove('success', 'failure');
+                messageDiv.classList.add('placeholder');
+                messageDiv.textContent = 'Vurdering av krav';
+                
+                errorMessageP.style.display = 'none';
+                document.getElementById('frsi-result').textContent = '--';
+                document.getElementById('frsi-min-result').textContent = '--';
+                
+                const theta_i_input = document.getElementById('theta_i').value;
+                const theta_e_input = document.getElementById('theta_e').value;
+                const phi_e_input = document.getElementById('phi_e').value;
+                const U_input = document.getElementById('u_value').value;
+                if (!theta_i_input || !theta_e_input || !phi_e_input || !U_input) {
+                    errorMessageP.textContent = "Vennligst fyll ut alle feltene.";
+                    errorMessageP.style.display = 'block';
+                    return;
+                }
+                const theta_i = parseFloat(theta_i_input);
+                const theta_e = parseFloat(theta_e_input);
+                const phi_e = parseFloat(phi_e_input);
+                const U = parseFloat(U_input);
+                const R_si = parseFloat(document.getElementById('rsi_value').value);
+                const humidityClass = parseInt(document.getElementById('humidity_class').value);
+                if (isNaN(theta_i) || isNaN(theta_e) || isNaN(phi_e) || isNaN(U)) {
+                    errorMessageP.textContent = "Vennligst sørg for at alle felt inneholder tall.";
+                    errorMessageP.style.display = 'block';
+                    return;
+                }
+                const theta_si = theta_i - U * (theta_i - theta_e) * R_si;
+                const f_Rsi = (theta_si - theta_e) / (theta_i - theta_e);
+                const p_e_sat_hPa = getSaturatedVaporPressure(theta_e);
+                const p_e_sat_Pa = p_e_sat_hPa * 100;
+                const p_e = p_e_sat_Pa * (phi_e / 100);
+                const delta_p = getDeltaP(humidityClass, theta_e);
+                const p_i = p_e + delta_p;
+                const p_i_sat_critical_Pa = p_i / 0.80;
+                const p_i_sat_critical_hPa = p_i_sat_critical_Pa / 100;
+                const theta_si_min = getTempForSaturatedPressure(p_i_sat_critical_hPa);
+                const f_Rsi_min = (theta_si_min - theta_e) / (theta_i - theta_e);
+                displayResults(f_Rsi, f_Rsi_min);
+            }
+            
+            function displayResults(f_Rsi, f_Rsi_min) {
+                const messageDiv = document.getElementById('result-message');
+                const frsiResultSpan = document.getElementById('frsi-result');
+                const frsiMinResultSpan = document.getElementById('frsi-min-result');
+                
+                frsiResultSpan.textContent = f_Rsi.toFixed(2);
+                frsiMinResultSpan.textContent = f_Rsi_min.toFixed(2);
+                
+                messageDiv.classList.remove('placeholder');
+                messageDiv.classList.remove('success', 'failure');
+
+                if (f_Rsi >= f_Rsi_min) {
+                    messageDiv.textContent = "Kravet er oppfylt: Risiko for muggvekst er minimal.";
+                    messageDiv.classList.add('success');
+                } else {
+                    messageDiv.textContent = "Kravet er ikke oppfylt: Det er risiko for kondens og muggvekst!";
+                    messageDiv.classList.add('failure');
+                }
+            }
+
+            document.getElementById('calculate-btn').addEventListener('click', performCalculation);
+        });
+    </script>
+</body>
+</html>
