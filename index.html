@@ -233,11 +233,11 @@
                 <div class="custom-select-container" id="humidity_select_container">
                     <div class="custom-select-trigger" id="humidity_class_trigger" tabindex="0"><span class="trigger-text">3: Bygninger med ukjent bruk</span></div>
                     <ul class="custom-options" id="humidity_options">
-                        <li data-value="1">1: Tørrlager</li>
+                        <li data-value="1">1: Ubebodde bygninger, tørrlager</li>
                         <li data-value="2">2: Kontorer, boliger med normal bruk og ventilasjon</li>
                         <li data-value="3" class="selected">3: Bygninger med ukjent bruk</li>
                         <li data-value="4">4: Idrettshaller, kjøkken, kantiner</li>
-                        <li data-value="5">5: Vaskerier, bryggerier, svømmehaller</li>
+                        <li data-value="5">5: Spesialbygninger, f.eks. vaskeri, bryggeri, svømmehall</li>
                     </ul>
                 </div>
                 <input type="hidden" id="humidity_class" value="3">
@@ -305,17 +305,14 @@
             ];
             const errorMessageP = document.getElementById('error-message');
             function interpolate(x, x0, y0, x1, y1) { if (x1 === x0) return y0; return y0 + (x - x0) * (y1 - y0) / (x1 - x0); }
-            
             function getSaturatedVaporPressure(temp) {
                 if (temp <= vaporPressureData[0][0]) return vaporPressureData[0][1];
-                // ИСПРАВЛЕННАЯ СТРОКА
                 if (temp >= vaporPressureData[vaporPressureData.length - 1][0]) return vaporPressureData[vaporPressureData.length - 1][1];
                 for (let i = 0; i < vaporPressureData.length - 1; i++) {
                     const [t0, p0] = vaporPressureData[i]; const [t1, p1] = vaporPressureData[i + 1];
                     if (temp >= t0 && temp <= t1) return interpolate(temp, t0, p0, t1, p1);
                 } return vaporPressureData[vaporPressureData.length - 1][1];
             }
-
             function getTempForSaturatedPressure(pressure) {
                 if (pressure <= vaporPressureData[0][1]) return vaporPressureData[0][0];
                 if (pressure >= vaporPressureData[vaporPressureData.length - 1][1]) return vaporPressureData[vaporPressureData.length - 1][0];
